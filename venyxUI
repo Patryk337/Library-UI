@@ -221,7 +221,7 @@ do
 				Name = "Main",
 				BackgroundTransparency = 1,
 				Position = UDim2.new(0.25, 0, 0.052435593, 0),
-				Size = UDim2.new(0, 511, 0, 428),
+				Size = UDim2.new(0, 450, 0, 300),
 				Image = "rbxassetid://4641149554",
 				ImageColor3 = themes.Background,
 				ScaleType = Enum.ScaleType.Slice,
@@ -420,19 +420,20 @@ do
 		}, section) 
 	end
 	
-	function library:addPage(...)
-	
-		local page = page.new(self, ...)
-		local button = page.button
-		
-		table.insert(self.pages, page)
-
-		button.MouseButton1Click:Connect(function()
-			self:SelectPage(page, true)
-		end)
-		
-		return page
-	end
+    function library:addPage(...)
+        local page = page.new(self, ...)
+        local button = page.button
+    
+        table.insert(self.pages, page)
+    
+        button.MouseButton1Click:Connect(function()
+            self:SelectPage(page, true)
+        end)
+    
+        self:updatePagesContainer()
+    
+        return page
+    end
 	
 	function page:addSection(...)
 		local section = section.new(self, ...)
@@ -591,7 +592,7 @@ do
 		notification.Title.Text = title
 		notification.Text.Text = text
 		
-		local padding = 10
+		local padding = 20
 		local textSize = game:GetService("TextService"):GetTextSize(text, 12, Enum.Font.Gotham, Vector2.new(math.huge, 16))
 		
 		notification.Position = library.lastNotification or UDim2.new(0, padding, 1, -(notification.AbsoluteSize.Y + padding))
@@ -659,6 +660,14 @@ do
 			close()
 		end)
 	end
+
+    function library:updatePagesContainer()
+        if self.pagesContainer and self.pagesContainer.UIListLayout then
+            local layout = self.pagesContainer.UIListLayout
+            local totalHeight = layout.AbsoluteContentSize.Y
+            self.pagesContainer.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+        end
+    end
 	
 	function section:addButton(title, callback)
 		local button = utility:Create("ImageButton", {
