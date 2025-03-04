@@ -1690,7 +1690,7 @@ do
 		return slider
 	end
 	
-	function section:addDropdown(title, list, callback)
+	function section:addDropdown(title, listProvider, callback)
 		local dropdown = utility:Create("Frame", {
 			Name = "Dropdown",
 			Parent = self.container,
@@ -1772,27 +1772,33 @@ do
 			})
 		})
 		
+		self.lists = self.lists or {}
+		self.lists[dropdown] = {
+			listProvider = listProvider,
+			callback = callback
+		}
+		
 		table.insert(self.modules, dropdown)
-		--self:Resize()
 		
 		local search = dropdown.Search
 		local focused
 		
-		list = list or {}
-		
 		search.Button.MouseButton1Click:Connect(function()
+			local listData = self.lists[dropdown]
+			local currentList = type(listData.listProvider) == "function" and listData.listProvider() or listData.listProvider
 			if search.Button.Rotation == 0 then
-				self:updateDropdown(dropdown, nil, list, callback)
+				self:updateDropdown(dropdown, nil, currentList, listData.callback)
 			else
-				self:updateDropdown(dropdown, nil, nil, callback)
+				self:updateDropdown(dropdown, nil, nil, listData.callback)
 			end
 		end)
 		
 		search.TextBox.Focused:Connect(function()
+			local listData = self.lists[dropdown]
+			local currentList = type(listData.listProvider) == "function" and listData.listProvider() or listData.listProvider
 			if search.Button.Rotation == 0 then
-				self:updateDropdown(dropdown, nil, list, callback)
+				self:updateDropdown(dropdown, nil, currentList, listData.callback)
 			end
-			
 			focused = true
 		end)
 		
@@ -1802,10 +1808,11 @@ do
 		
 		search.TextBox:GetPropertyChangedSignal("Text"):Connect(function()
 			if focused then
-				local list = utility:Sort(search.TextBox.Text, list)
-				list = #list ~= 0 and list 
-				
-				self:updateDropdown(dropdown, nil, list, callback)
+				local listData = self.lists[dropdown]
+				local currentList = type(listData.listProvider) == "function" and listData.listProvider() or listData.listProvider
+				local filteredList = utility:Sort(search.TextBox.Text, currentList)
+				filteredList = #filteredList ~= 0 and filteredList
+				self:updateDropdown(dropdown, nil, filteredList, listData.callback)
 			end
 		end)
 		
